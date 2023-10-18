@@ -303,7 +303,18 @@ class Commit:
             path=self._escape_path(git_path(file_info.path)),
             mode=file_info.mode
         ))
-        self._write_data(file_info.data)
+
+        # check if lfs filter apply to the file
+        cmd = ['git', 'check-attr', 'filter', '--', git_path(file_info.path)]
+        p = sp.run(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
+
+        # If so, write the pointer, no the data itself.
+        if p.stdout.split(" ")[-1].strip() == "lfs":
+            cmd = ['git', 'lfs', 'clean']
+            p = sp.run(cmd, input=str(file_info.data), stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
+            self._write_data(p.stdout)
+        else:
+           self._write_data(file_info.data)
 
     def finish(self):
         if self._finished:
