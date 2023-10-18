@@ -311,7 +311,7 @@ class Commit:
         # If so, write the pointer, no the data itself.
         if p.stdout.split(" ")[-1].strip() == "lfs":
             cmd = ['git', 'lfs', 'clean']
-            p = sp.run(cmd, input=str(file_info.data), stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
+            p = sp.run(cmd, input=file_info.data, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=False)
             self._write_data(p.stdout)
         else:
            self._write_data(file_info.data)
