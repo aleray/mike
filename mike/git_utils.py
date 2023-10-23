@@ -393,7 +393,17 @@ def read_file(branch, filename, universal_newlines=False,
     if p.returncode != 0:
         raise GitError('unable to read file {!r}'.format(filename),
                        str(p.stderr))
-    return p.stdout
+
+    cmd = ['git', 'check-attr', 'filter', '--', git_path(filename)]
+    pp = sp.run(cmd, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
+
+    # If so, write the pointer, no the data itself.
+    if pp.stdout.split(" ")[-1].strip() == "lfs":
+        cmd = ['git', 'lfs', 'smudge']
+        ppp = sp.run(cmd, input=p.stdout, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=False)
+        return ppp.stdout
+    else:
+        return p.stdout
 
 
 def walk_files(branch, path=''):
